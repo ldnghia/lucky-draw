@@ -31,39 +31,41 @@ export function EmployeeInput({ onSubmit }: EmployeeInputProps) {
       name: nameList[index]
     }))
 
+    localStorage.setItem('employees', JSON.stringify(employees))
+
     onSubmit(employees)
   }
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Enter Employee Data</CardTitle>
+        <CardTitle>Nhập danh sách nhân viên</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="ids">Employee IDs</Label>
+              <Label htmlFor="ids">Mã số nhân viên</Label>
               <Textarea
                 id="ids"
-                placeholder="Enter employee IDs (one per line)"
+                placeholder=""
                 value={ids}
                 onChange={(e) => setIds(e.target.value)}
                 className="h-[200px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="names">Employee Names</Label>
+              <Label htmlFor="names">Tên nhân viên</Label>
               <Textarea
                 id="names"
-                placeholder="Enter employee names (one per line)"
+                placeholder=""
                 value={names}
                 onChange={(e) => setNames(e.target.value)}
                 className="h-[200px]"
               />
             </div>
           </div>
-          <Button type="submit" className="w-full">Load Employees</Button>
+          <Button type="submit" className="w-full">Cập nhật danh sách</Button>
         </form>
       </CardContent>
     </Card>

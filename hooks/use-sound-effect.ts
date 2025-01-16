@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 export function useSoundEffect(src: string) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [isSupported, setIsSupported] = useState(true)
+  const [isSupported, setIsSupported] = useState(false)
 
   useEffect(() => {
     const audio = new Audio(src)
