@@ -230,23 +230,6 @@ export default function LuckyDraw() {
 
           </div>
 
-          {/* Settings Section */}
-          {isSetting &&
-            <div className="mt-16 space-y-4">
-              <Input
-                value={settings.title}
-                onChange={(e) => setSettings(prev => ({ ...prev, title: e.target.value }))}
-                className="text-center text-2xl font-bold"
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <EmployeeInput onSubmit={setEmployees} />
-                <PrizeConfig
-                  prizes={settings.prizes}
-                  onUpdate={(prizes) => setSettings(prev => ({ ...prev, prizes }))}
-                />
-              </div>
-            </div>}
-
           <div className="max-w-3xl mx-auto">
             {winnerSave.slice().reverse().map((winner, index) => (
               <div
@@ -270,6 +253,22 @@ export default function LuckyDraw() {
               </div>
             ))}
           </div>
+          {/* Settings Section */}
+          {isSetting &&
+            <div className="mt-16 space-y-4">
+              <Input
+                value={settings.title}
+                onChange={(e) => setSettings(prev => ({ ...prev, title: e.target.value }))}
+                className="text-center text-2xl font-bold"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <EmployeeInput onSubmit={setEmployees} />
+                <PrizeConfig
+                  prizes={settings.prizes}
+                  onUpdate={(prizes) => setSettings(prev => ({ ...prev, prizes }))}
+                />
+              </div>
+            </div>}
         </div>
       </div>
       <div className='fixed right-14 bottom-11'>
