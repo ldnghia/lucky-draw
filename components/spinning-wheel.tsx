@@ -7,13 +7,15 @@ interface SpinningWheelProps {
   onComplete: (winner: Employee) => void;
   participants: Employee[];
   selectedPrize: Prize | null;
+  winnerTemp?: Employee
+  isReload?: boolean
 }
 
-export function SpinningWheel({ isSpinning, onComplete, participants, selectedPrize }: SpinningWheelProps) {
-  const [cells, setCells] = useState<string[]>(Array(5).fill(''));
+export function SpinningWheel({ isSpinning, onComplete, participants, selectedPrize, winnerTemp, isReload }: SpinningWheelProps) {
+  const [cells, setCells] = useState<string[]>(Array(5).fill('9'));
   const [lockedCells, setLockedCells] = useState<boolean[]>(Array(5).fill(false));
   const [winner, setWinner] = useState<Employee | null>(null);
- 
+
   // Generate random alphanumeric character
   const getRandomChar = () => {
     const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -22,14 +24,17 @@ export function SpinningWheel({ isSpinning, onComplete, participants, selectedPr
 
   // Update spinning cells
   useEffect(() => {
+    var intervals: (NodeJS.Timeout | null)[] = [];
+
     if (!isSpinning) {
-      setLockedCells(Array(5).fill(false));
-      setCells(Array(5).fill(''));
+      // setLockedCells(Array(5).fill(false));
+      // setCells(Array(5).fill('9'));
       setWinner(null);
+      intervals.forEach(interval => interval && clearInterval(interval));
       return;
     }
 
-    const intervals = cells.map((_, index) => {
+    intervals = cells.map((_, index) => {
       if (lockedCells[index]) return null;
 
       return setInterval(() => {
@@ -40,13 +45,21 @@ export function SpinningWheel({ isSpinning, onComplete, participants, selectedPr
           }
           return newCells;
         });
-      }, 50 + index * 20); // Slightly different speeds for each cell
+      }, 50 + index * 20);
     });
 
     return () => {
       intervals.forEach(interval => interval && clearInterval(interval));
     };
-  }, [isSpinning]);
+  }, [isSpinning, lockedCells]);
+
+  useEffect(() => {
+   if(isReload){
+    setLockedCells(Array(5).fill(false));
+    setCells(Array(5).fill('9'));
+    setWinner(null);
+   }
+  }, [isReload]);
 
   // Handle Enter key press
   useEffect(() => {
@@ -54,6 +67,12 @@ export function SpinningWheel({ isSpinning, onComplete, participants, selectedPr
       if (event.key === 'Enter' && isSpinning) {
         const currentLockedCount = lockedCells.filter(Boolean).length;
         if (currentLockedCount < 5) {
+          setCells(prev => {
+            const newCells = [...prev];
+            newCells[currentLockedCount] = winnerTemp ? winnerTemp.id[currentLockedCount] : "0";
+            return newCells;
+          });
+          
           setLockedCells(prev => {
             const newLocked = [...prev];
             newLocked[currentLockedCount] = true;
@@ -62,14 +81,15 @@ export function SpinningWheel({ isSpinning, onComplete, participants, selectedPr
 
           // If this is the last cell, select winner
           if (currentLockedCount === 4) {
-            const randomWinner = participants[Math.floor(Math.random() * participants.length)];
-            setWinner(randomWinner);
-            onComplete(randomWinner);
-           
+            // const randomWinner = participants[Math.floor(Math.random() * participants.length)];
+            if(winnerTemp){
+              setWinner(winnerTemp);
+              onComplete(winnerTemp);
+            }
             // Set final winner ID in cells
-            setTimeout(() => {
-              setCells(randomWinner.id.split(''));
-            }, 100);
+            // setTimeout(() => {
+            //   setCells(randomWinner.id.split(''));
+            // }, 100);
           }
         }
       }

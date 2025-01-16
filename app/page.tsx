@@ -23,17 +23,18 @@ export default function LuckyDraw() {
     ]
   })
 
-  const [employees, setEmployees] = useState<Employee[]>([
-    { id: '12345', name: 'Nguyễn Văn A' },
-    { id: '12346', name: 'Trần Thị B' },
-    { id: '12347', name: 'Lê Văn C' },
-  ])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [currentWinner, setCurrentWinner] = useState<Employee | null>(null)
   const [isSpinning, setIsSpinning] = useState(false)
   const [isSetting, setIsSetting] = useState(false)
   const [selectedPrize, setSelectedPrize] = useState<Prize | null>({ id: '3', name: 'Giải Ba', enabled: true })
   const [winners, setWinners] = useState<Array<{ employee: Employee; prize: Prize }>>([])
   const [remainingParticipants, setRemainingParticipants] = useState<Employee[]>([])
+  const [winner, setWinner] = useState<Employee | undefined>(undefined);
+  const [winnerSave, setWinnerSave] = useState<Array<{ employee: Employee; prize: Prize }>>([])
+  const [isReload, setIsReload] = useState(false)
+
+
 
   const { play: playSpinSound, stop: stopSpinSound, isSupported: isSoundSupported } = useSoundEffect('/spin-sound.mp3')
 
@@ -45,9 +46,12 @@ export default function LuckyDraw() {
     if (isSpinning || !selectedPrize) return
     setIsSpinning(true)
     setCurrentWinner(null)
+    const randomWinner = remainingParticipants[Math.floor(Math.random() * remainingParticipants.length)];
+    setWinner(randomWinner);
     if (isSoundSupported) {
       playSpinSound()
     }
+    setIsReload(false)
   }
 
   const handleSpinComplete = (winner: Employee) => {
@@ -57,6 +61,8 @@ export default function LuckyDraw() {
       stopSpinSound()
     }
     if (selectedPrize) {
+      console.log('selectedPrize', selectedPrize);
+
       setWinners(prev => [...prev, { employee: winner, prize: selectedPrize }])
       setRemainingParticipants(prev => prev.filter(emp => emp.id !== winner.id))
       confetti({
@@ -65,11 +71,21 @@ export default function LuckyDraw() {
         origin: { y: 0.6 }
       })
     }
+    setWinner(undefined);
   }
 
   useEffect(() => {
     localStorage.setItem('winners', JSON.stringify(winners))
   }, [winners])
+
+  // useEffect(() => {
+  //   // In a real application, you would fetch this data from an API or local storage
+  //   const storedWinners = localStorage.getItem('winners')
+  //   if (storedWinners) {
+  //     setWinnerSave(JSON.parse(storedWinners))
+  //   }
+  // }, [winners])
+
 
   const nextPrize = () => {
     const index = settings?.prizes?.findIndex(p => p.id === selectedPrize?.id)
@@ -136,18 +152,33 @@ export default function LuckyDraw() {
               onComplete={handleSpinComplete}
               participants={remainingParticipants}
               selectedPrize={selectedPrize}
+              winnerTemp={winner}
+              isReload={isReload}
             />
           </div>
 
           {/* Spin Button */}
-          <Button
-            size="lg"
-            onClick={handleSpin}
-            disabled={isSpinning || !selectedPrize || remainingParticipants.length === 0}
-            className="bg-yellow-400 hover:bg-yellow-500 text-black px-12 mb-8"
-          >
-            {isSpinning ? 'Đang quay...' : 'QUAY SỐ'}
-          </Button>
+          <div className='flex items-center justify-center gap-4'>
+            <Button
+              size="lg"
+              onClick={handleSpin}
+              disabled={isSpinning || !selectedPrize || remainingParticipants.length === 0}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black px-12 mb-8"
+            >
+              {isSpinning ? 'Đang quay...' : 'QUAY SỐ'}
+            </Button>
+
+            <Button
+              size="lg"
+              onClick={() => {
+                setIsReload(true)
+              }}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black px-12 mb-8"
+            >
+              Tiếp tục
+            </Button>
+          </div>
+
 
           <div className="mt-8">
             <Link href="/winners" className="text-yellow-400 hover:underline">
@@ -172,6 +203,21 @@ export default function LuckyDraw() {
               />
             </div>
           </div>}
+
+        <div className="max-w-3xl mx-auto">
+          {winnerSave.map((winner, index) => (
+            <div
+              key={index}
+              className="bg-white/10 rounded-lg p-4 mb-2 flex justify-between items-center"
+            >
+              <div>
+                <div className="font-bold text-white">{winner.employee.name}</div>
+                <div className="text-sm text-gray-400">{winner.employee.id}</div>
+              </div>
+              <div className="text-yellow-400">{winner.prize.name}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
