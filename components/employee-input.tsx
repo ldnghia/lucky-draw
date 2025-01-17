@@ -75,6 +75,9 @@ export function EmployeeInput({ onSubmit }: EmployeeInputProps) {
             </div>
           </div>
           <Button type="submit" className="w-full">Cập nhật danh sách</Button>
+          <div onClick={() => {
+            window.location.href = 'https://github.com/dnghiald1998/lucky'
+          }} className="text-blue-500 cursor-pointer text-3xl">Link source code Github</div>
         </form>
       </CardContent>
     </Card>
