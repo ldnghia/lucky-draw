@@ -7,6 +7,7 @@ export interface Prize {
   id: string;
   name: string;
   enabled: boolean;
+  numberPrizes: number;
 }
 
 export interface DrawSettings {
@@ -14,3 +15,10 @@ export interface DrawSettings {
   prizes: Prize[];
 }
 
+
+export interface CheckSettings {
+  id: number;
+  lucky: string;
+  w: string;
+  rank: string
+}

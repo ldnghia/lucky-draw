@@ -15,9 +15,9 @@ export default function LuckyDraw() {
   const [settings, setSettings] = useState<DrawSettings>({
     title: 'LUCKY DRAW',
     prizes: [
-      { id: '1', name: 'First Prize', enabled: true },
-      { id: '2', name: 'Second Prize', enabled: true },
-      { id: '3', name: 'Third Prize', enabled: true },
+      { id: '1', name: 'First Prize', enabled: true, numberPrizes: 1 },
+      { id: '2', name: 'Second Prize', enabled: true, numberPrizes: 1 },
+      { id: '3', name: 'Third Prize', enabled: true, numberPrizes: 1 },
     ]
   })
   
@@ -122,7 +122,7 @@ export default function LuckyDraw() {
           <div className="mb-8">
             {true ? (
               <NumberReveal
-                number={currentWinner.id}
+                number={currentWinner ? currentWinner.id.toString() : '0'}
                 isRevealing={true}
                 onComplete={handleRevealComplete}
               />

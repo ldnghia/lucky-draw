@@ -136,7 +136,7 @@ export function SpinningWheel({ isSpinning, onComplete, participants, selectedPr
           {cells.map((char, index) => (
             <div
               key={index}
-              className={`w-32 h-32 flex items-center justify-center rounded-lg 
+              className={`w-32 h-36 flex items-center justify-center rounded-lg 
               ${lockedCells[index] ? 'bg-yellow-400' : 'bg-yellow-400/20'}
               transition-colors duration-300`}
             >
