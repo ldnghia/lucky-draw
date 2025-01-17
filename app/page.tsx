@@ -292,7 +292,7 @@ export default function LuckyDraw() {
 
             </div>
             <div className="text-2xl text-yellow-400 mb-2">
-              <span>Có người <span className='font-bold'>{remainingParticipants.length}</span> tham gia </span>
+              <span>Có <span className='font-bold'>{remainingParticipants.length}</span> người tham gia </span>
               <span>Tỉ lệ trúng giải là
                 <span className='font-bold'>
                   {remainingParticipants.length > 0 && (
@@ -307,7 +307,7 @@ export default function LuckyDraw() {
               <div className="mt-4">
                 <div className='text-yellow-400 text-3xl cursor-pointer' onClick={() => {
                   router.push('/winners')
-                }}>Danh sách người trúng thưởng</div>
+                }}>Danh sách trúng thưởng</div>
               </div>
             }
 
